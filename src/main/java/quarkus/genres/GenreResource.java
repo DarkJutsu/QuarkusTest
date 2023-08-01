@@ -1,6 +1,8 @@
 package quarkus.genres;
 
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -23,27 +25,31 @@ public class GenreResource {
         return rGen.findAll(Sort.descending("createAt")).page(p).list();
     }*/
     @GET
-    public PaginatedResponse<Genres> getGenresPage(@QueryParam("page") @DefaultValue("1") int page){
-        Page p=new Page(page-1, 5);
-        var panacheQuery=rGen.findAll(Sort.descending("createAt")).page(p);
+    public PaginatedResponse<Genres> getGenresPage(@QueryParam("page") @DefaultValue("1") int page, @QueryParam("q") String q) {
+        PanacheQuery panacheQuery= rGen.findPage(page);
+        if (q != null) {
+            String nameLike = "%" + q + "%";
+            panacheQuery.filter("name.like", Parameters.with("name", nameLike));
+        }
         return new PaginatedResponse<>(panacheQuery);
     }
+
     @GET
     @Path("{id}")
-    public Genres getGenre(@PathParam("id") Long id){
-        return rGen.findByIdOptional(id).orElseThrow(()->new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
+    public Genres getGenre(@PathParam("id") Long id) {
+        return rGen.findByIdOptional(id).orElseThrow(() -> new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
     }
 
     @POST
-    public Response addGenre(Genres gen){
+    public Response addGenre(Genres gen) {
         rGen.persist(gen);
         return Response.created(URI.create("/genres/" + gen.getId())).entity(gen).build();
     }
 
     @PUT
     @Path("{id}")
-    public Genres updateGenre(@PathParam("id") Long id, Genres gen){
-        Genres update=rGen.findByIdOptional(id).orElseThrow(()->new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
+    public Genres updateGenre(@PathParam("id") Long id, Genres gen) {
+        Genres update = rGen.findByIdOptional(id).orElseThrow(() -> new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
         update.setName(gen.getName());
         rGen.persist(update);
         return update;
@@ -51,7 +57,7 @@ public class GenreResource {
 
     @DELETE
     @Path("{id}")
-    public void deleteGenre(@PathParam("id") Long id){
+    public void deleteGenre(@PathParam("id") Long id) {
         rGen.deleteById(id);
     }
 
