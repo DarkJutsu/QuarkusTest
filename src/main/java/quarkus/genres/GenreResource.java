@@ -31,35 +31,37 @@ public class GenreResource {
         return rGen.findAll(Sort.descending("createAt")).page(p).list();
     }*/
     @GET
-    public PaginatedResponse<Genres> getGenresPage(@QueryParam("page") @DefaultValue("1") int page, @QueryParam("q") String q) {
-        PanacheQuery panacheQuery= rGen.findPage(page);
+    public PaginatedResponse<GenreResponceDTO> getGenresPage(@QueryParam("page") @DefaultValue("1") int page, @QueryParam("q") String q) {
+        PanacheQuery<Genres> panacheQuery= rGen.findPage(page);
+        PanacheQuery<GenreResponceDTO> present= panacheQuery.project(GenreResponceDTO.class);
         if (q != null) {
             String nameLike = "%" + q + "%";
-            panacheQuery.filter("name.like", Parameters.with("name", nameLike));
+            present.filter("name.like", Parameters.with("name", nameLike));
         }
-        return new PaginatedResponse<>(panacheQuery);
+        return new PaginatedResponse<>(present);
     }
 
     @GET
     @Path("{id}")
-    public Genres getGenre(@PathParam("id") Long id) {
-        return rGen.findByIdOptional(id).orElseThrow(() -> new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
+    public GenreResponceDTO getGenre(@PathParam("id") Long id) {
+        return rGen.findByIdOptional(id).map(mapper::present).orElseThrow(() -> new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
     }
 
     @POST
     public Response addGenre(CreateGenreDTO genre) {
         Genres entity=mapper.fromCreate(genre);
         rGen.persist(entity);
-        return Response.created(URI.create("/genres/" + entity.getId())).entity(entity).build();
+        var presentation=mapper.present(entity);
+        return Response.created(URI.create("/genres/" + entity.getId())).entity(presentation).build();
     }
 
     @PUT
     @Path("{id}")
-    public Genres updateGenre(@PathParam("id") Long id, UpdateGenreDTO gen) {
+    public GenreResponceDTO updateGenre(@PathParam("id") Long id, UpdateGenreDTO gen) {
         Genres update = rGen.findByIdOptional(id).orElseThrow(() -> new NoSuchElementException("Genre " + id + " no se a encontrado!!!"));
         mapper.fromUpdate(gen, update);
         rGen.persist(update);
-        return update;
+        return mapper.present(update);
     }
 
     @DELETE

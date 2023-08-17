@@ -22,10 +22,8 @@ public class Genres {
     @JsonAlias({"name", "genreName"})
     private String name;
     @CreationTimestamp
-    @JsonIgnore
     private LocalDateTime createAt;
     @UpdateTimestamp
-    @JsonIgnore
     private LocalDateTime updateAt;
 
     public Long getId() {

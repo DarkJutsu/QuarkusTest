@@ -4,6 +4,7 @@ import io.quarkus.panache.common.Sort;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
+import quarkus.genres.GenreMapper;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -40,8 +41,6 @@ public class BookResource {
         if (book != null) return book;
         throw new NoSuchElementException("No hay libro con el ID " + id + ".");
     }
-
-
 
     @POST
     public Book setBook(Book b) {
